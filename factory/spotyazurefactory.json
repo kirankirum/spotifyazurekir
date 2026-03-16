@@ -1,0 +1,9 @@
+{
+	"name": "spotyazurefactory",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "d9e863a2-d239-4b52-b9fd-5087fce84548",
+		"tenantId": "b09a4e33-2e75-42e6-9199-5e3f58bfb942"
+	}
+}
