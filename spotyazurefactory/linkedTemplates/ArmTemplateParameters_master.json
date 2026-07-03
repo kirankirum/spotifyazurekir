@@ -1,0 +1,45 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "spotyazurefactory"
+		},
+		"ls_azure_sql_password": {
+			"value": ""
+		},
+		"ls_data_lake_accountKey": {
+			"value": ""
+		},
+		"ls_onprem_sql_password": {
+			"value": ""
+		},
+		"ls_azure_sql_properties_typeProperties_server": {
+			"value": "sqlkir.database.windows.net"
+		},
+		"ls_azure_sql_properties_typeProperties_database": {
+			"value": "free-sql-db-4745755"
+		},
+		"ls_azure_sql_properties_typeProperties_userName": {
+			"value": "adminadmin"
+		},
+		"ls_data_lake_properties_typeProperties_url": {
+			"value": "https://databricklake879.dfs.core.windows.net/"
+		},
+		"ls_onprem_sql_properties_typeProperties_server": {
+			"value": "LAPTOP-SJ8OTNI9\\SQLEXPRESS"
+		},
+		"ls_onprem_sql_properties_typeProperties_database": {
+			"value": "master"
+		},
+		"ls_onprem_sql_properties_typeProperties_userName": {
+			"value": "testuser"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}

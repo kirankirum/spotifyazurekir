@@ -1,0 +1,405 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "spotyazurefactory"
+		},
+		"ls_azure_sql_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'ls_azure_sql'"
+		},
+		"ls_data_lake_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ls_data_lake'"
+		},
+		"ls_onprem_sql_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'ls_onprem_sql'"
+		},
+		"ls_azure_sql_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "sqlkir.database.windows.net"
+		},
+		"ls_azure_sql_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "free-sql-db-4745755"
+		},
+		"ls_azure_sql_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "adminadmin"
+		},
+		"ls_data_lake_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://databricklake879.dfs.core.windows.net/"
+		},
+		"ls_onprem_sql_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "LAPTOP-SJ8OTNI9\\SQLEXPRESS"
+		},
+		"ls_onprem_sql_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "master"
+		},
+		"ls_onprem_sql_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "testuser"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_azure_sql')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('ls_azure_sql_properties_typeProperties_server')]",
+					"database": "[parameters('ls_azure_sql_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('ls_azure_sql_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('ls_azure_sql_password')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_data_lake')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('ls_data_lake_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('ls_data_lake_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/integrationRuntime1')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "SelfHosted",
+				"typeProperties": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_bronze_parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_data_lake",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"directory": {
+						"type": "string"
+					},
+					"folder": {
+						"type": "string"
+					},
+					"file": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().file",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folder",
+							"type": "Expression"
+						},
+						"fileSystem": {
+							"value": "@dataset().directory",
+							"type": "Expression"
+						}
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_data_lake')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_dynamyc_json')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_data_lake",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"container": {
+						"type": "string"
+					},
+					"folder": {
+						"type": "string"
+					},
+					"file": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().file",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folder",
+							"type": "Expression"
+						},
+						"fileSystem": {
+							"value": "@dataset().container",
+							"type": "Expression"
+						}
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_data_lake')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_onprem_sql')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "SqlServer",
+				"typeProperties": {
+					"server": "[parameters('ls_onprem_sql_properties_typeProperties_server')]",
+					"database": "[parameters('ls_onprem_sql_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": true,
+					"authenticationType": "SQL",
+					"userName": "[parameters('ls_onprem_sql_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('ls_onprem_sql_password')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "integrationRuntime1",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/integrationRuntime1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_sql_onprem')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_onprem_sql",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [],
+				"typeProperties": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_onprem_sql')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/incremental_ingestion')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "SqlToAzure",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "cdc_lookup",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "current",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"sqlReaderQuery": {
+									"value": "select * from @{pipeline().parameters.schema}.@{pipeline().parameters.table} where @{pipeline().parameters.cdc_col} > '@{activity('cdc_lookup').output.value[0].cdc}'",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "ds_sql_onprem",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ds_bronze_parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"directory": "spotify12project",
+									"folder": "bronze/Users",
+									"file": {
+										"value": "@concat(pipeline().parameters.table, '_', variables('currrent'))",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "cdc_lookup",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "ds_dynamyc_json",
+								"type": "DatasetReference",
+								"parameters": {
+									"container": "spotify12project",
+									"folder": "bronze/cdc",
+									"file": "cdc (1).json"
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "current",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "currrent",
+							"value": {
+								"value": "@utcNow()",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"schema": {
+						"type": "string"
+					},
+					"table": {
+						"type": "string"
+					},
+					"cdc_col": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"currrent": {
+						"type": "String"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_sql_onprem')]",
+				"[concat(variables('factoryId'), '/datasets/ds_bronze_parquet')]",
+				"[concat(variables('factoryId'), '/datasets/ds_dynamyc_json')]"
+			]
+		}
+	]
+}
