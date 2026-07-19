@@ -109,8 +109,11 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"container": "spotify12project",
-							"folder": "bronze/cdc",
-							"file": "cdc (1).json"
+							"folder": {
+								"value": "bronze/@{pipeline().parameters.table}_cdc",
+								"type": "Expression"
+							},
+							"file": "cdc.json"
 						}
 					},
 					"firstRowOnly": false
@@ -240,8 +243,11 @@
 									"type": "DatasetReference",
 									"parameters": {
 										"container": "spotify12project",
-										"folder": "bronze/cdc",
-										"file": "empty (2).json"
+										"folder": {
+											"value": "bronze/@{pipeline().parameters.table}_cdc",
+											"type": "Expression"
+										},
+										"file": "empty.json"
 									}
 								}
 							],
@@ -251,8 +257,8 @@
 									"type": "DatasetReference",
 									"parameters": {
 										"container": "spotify12project",
-										"folder": "bronze/cdc",
-										"file": "cdc (1).json"
+										"folder": "bronze/@{pipeline().parameters.table}_cdc",
+										"file": "cdc.json"
 									}
 								}
 							]
