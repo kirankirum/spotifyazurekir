@@ -1,5 +1,11 @@
 {
 	"name": "spotyazurefactory",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Disabled",
+			"editable": true
+		}
+	},
 	"location": "eastus",
 	"identity": {
 		"type": "SystemAssigned",
